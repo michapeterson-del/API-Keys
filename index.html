@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API-Key Manager</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e2129;
+    --border: #2a2e38;
+    --text: #e8e9ec;
+    --muted: #8b90a0;
+    --accent: #6c8cff;
+    --accent-2: #7d5fff;
+    --danger: #ff6b6b;
+    --success: #4cd97b;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: radial-gradient(circle at top, #1a1d26, var(--bg) 60%);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 32px 16px 80px;
+  }
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  header h1 {
+    font-size: 1.6rem;
+    margin: 0 0 6px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  header p {
+    color: var(--muted);
+    margin: 0;
+    font-size: 0.9rem;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .field {
+    margin-bottom: 14px;
+  }
+  label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  input[type="text"], input[type="password"], select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    color: var(--text);
+    font-size: 0.95rem;
+    outline: none;
+  }
+  input:focus, select:focus {
+    border-color: var(--accent);
+  }
+  .key-row {
+    display: flex;
+    gap: 8px;
+  }
+  .key-row input { flex: 1; }
+  .icon-btn {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 0 12px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  .icon-btn:hover { border-color: var(--accent); }
+  .provider-custom {
+    margin-top: 8px;
+    display: none;
+  }
+  .btn-primary {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    color: white;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  .btn-primary:hover { opacity: 0.92; }
+  .list-title {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin: 0 0 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .empty {
+    color: var(--muted);
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 24px 0;
+  }
+  .item {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  .item-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .item-name {
+    font-weight: 600;
+    font-size: 1rem;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 2px 9px;
+    margin-top: 4px;
+  }
+  .item-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .item-actions button {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 7px;
+    padding: 5px 9px;
+    font-size: 0.78rem;
+    cursor: pointer;
+  }
+  .item-actions button:hover { color: var(--text); border-color: var(--accent); }
+  .item-actions button.danger:hover { color: var(--danger); border-color: var(--danger); }
+  .key-display {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.85rem;
+    color: var(--text);
+    background: var(--panel);
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    word-break: break-all;
+  }
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--panel-2);
+    border: 1px solid var(--success);
+    color: var(--success);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .toast.show { opacity: 1; }
+  .note {
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 24px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>API-Key Manager</h1>
+    <p>Deine API-Keys, gespeichert direkt in diesem Browser</p>
+  </header>
+
+  <div class="card">
+    <form id="key-form">
+      <div class="field">
+        <label for="name">Bezeichnung</label>
+        <input type="text" id="name" placeholder="z. B. Privates Projekt" required>
+      </div>
+
+      <div class="field">
+        <label for="provider">Gehostet bei</label>
+        <select id="provider">
+          <option value="Claude">Claude (Anthropic)</option>
+          <option value="ChatGPT">ChatGPT (OpenAI)</option>
+          <option value="Gemini">Gemini (Google)</option>
+          <option value="Custom">Andere / egal</option>
+        </select>
+        <input type="text" id="provider-custom" class="provider-custom" placeholder="Anbieter eingeben">
+      </div>
+
+      <div class="field">
+        <label for="key">API-Key</label>
+        <div class="key-row">
+          <input type="password" id="key" placeholder="sk-..." required>
+          <button type="button" class="icon-btn" id="toggle-new-key">Anzeigen</button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary" id="submit-btn">Key speichern</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <p class="list-title">Gespeicherte Keys</p>
+    <div id="list"></div>
+  </div>
+
+  <p class="note">
+    Alle Daten werden ausschließlich lokal in diesem Browser gespeichert (localStorage).<br>
+    Es gibt keinen Server — die Keys verlassen dieses Gerät nicht, sind aber auch nicht verschlüsselt.
+  </p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const STORAGE_KEY = "api-key-manager:keys";
+  let editingId = null;
+
+  const form = document.getElementById("key-form");
+  const nameInput = document.getElementById("name");
+  const providerSelect = document.getElementById("provider");
+  const providerCustom = document.getElementById("provider-custom");
+  const keyInput = document.getElementById("key");
+  const toggleNewKeyBtn = document.getElementById("toggle-new-key");
+  const submitBtn = document.getElementById("submit-btn");
+  const list = document.getElementById("list");
+  const toast = document.getElementById("toast");
+
+  function loadKeys() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveKeys(keys) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(keys));
+  }
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 1600);
+  }
+
+  function maskKey(key) {
+    if (key.length <= 8) return "•".repeat(key.length);
+    return key.slice(0, 4) + "•".repeat(Math.min(key.length - 8, 20)) + key.slice(-4);
+  }
+
+  providerSelect.addEventListener("change", () => {
+    providerCustom.style.display = providerSelect.value === "Custom" ? "block" : "none";
+  });
+
+  toggleNewKeyBtn.addEventListener("click", () => {
+    const isPw = keyInput.type === "password";
+    keyInput.type = isPw ? "text" : "password";
+    toggleNewKeyBtn.textContent = isPw ? "Verbergen" : "Anzeigen";
+  });
+
+  function resetForm() {
+    form.reset();
+    providerCustom.style.display = "none";
+    keyInput.type = "password";
+    toggleNewKeyBtn.textContent = "Anzeigen";
+    editingId = null;
+    submitBtn.textContent = "Key speichern";
+  }
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const name = nameInput.value.trim();
+    const provider = providerSelect.value === "Custom"
+      ? (providerCustom.value.trim() || "Andere")
+      : providerSelect.value;
+    const key = keyInput.value.trim();
+    if (!name || !key) return;
+
+    const keys = loadKeys();
+
+    if (editingId) {
+      const idx = keys.findIndex(k => k.id === editingId);
+      if (idx !== -1) keys[idx] = { ...keys[idx], name, provider, key };
+      showToast("Key aktualisiert");
+    } else {
+      keys.push({ id: crypto.randomUUID(), name, provider, key, revealed: false });
+      showToast("Key gespeichert");
+    }
+
+    saveKeys(keys);
+    resetForm();
+    render();
+  });
+
+  function startEdit(id) {
+    const k = loadKeys().find(k => k.id === id);
+    if (!k) return;
+    nameInput.value = k.name;
+    keyInput.value = k.key;
+    const known = ["Claude", "ChatGPT", "Gemini"];
+    if (known.includes(k.provider)) {
+      providerSelect.value = k.provider;
+      providerCustom.style.display = "none";
+    } else {
+      providerSelect.value = "Custom";
+      providerCustom.style.display = "block";
+      providerCustom.value = k.provider;
+    }
+    editingId = id;
+    submitBtn.textContent = "Änderungen speichern";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function deleteKey(id) {
+    if (!confirm("Diesen API-Key wirklich löschen?")) return;
+    saveKeys(loadKeys().filter(k => k.id !== id));
+    if (editingId === id) resetForm();
+    render();
+  }
+
+  function toggleReveal(id) {
+    const keys = loadKeys();
+    const k = keys.find(k => k.id === id);
+    if (!k) return;
+    k.revealed = !k.revealed;
+    saveKeys(keys);
+    render();
+  }
+
+  function copyKey(id) {
+    const k = loadKeys().find(k => k.id === id);
+    if (!k) return;
+    navigator.clipboard.writeText(k.key).then(() => showToast("Key kopiert"));
+  }
+
+  function render() {
+    const keys = loadKeys();
+    list.innerHTML = "";
+
+    if (keys.length === 0) {
+      list.innerHTML = '<div class="empty">Noch keine API-Keys gespeichert</div>';
+      return;
+    }
+
+    keys.forEach(k => {
+      const item = document.createElement("div");
+      item.className = "item";
+      item.innerHTML = `
+        <div class="item-top">
+          <div>
+            <div class="item-name">${escapeHtml(k.name)}</div>
+            <span class="badge">${escapeHtml(k.provider)}</span>
+          </div>
+          <div class="item-actions">
+            <button data-action="reveal">${k.revealed ? "Verbergen" : "Anzeigen"}</button>
+            <button data-action="copy">Kopieren</button>
+            <button data-action="edit">Bearbeiten</button>
+            <button data-action="delete" class="danger">Löschen</button>
+          </div>
+        </div>
+        <div class="key-display">${k.revealed ? escapeHtml(k.key) : maskKey(k.key)}</div>
+      `;
+      item.querySelector('[data-action="reveal"]').addEventListener("click", () => toggleReveal(k.id));
+      item.querySelector('[data-action="copy"]').addEventListener("click", () => copyKey(k.id));
+      item.querySelector('[data-action="edit"]').addEventListener("click", () => startEdit(k.id));
+      item.querySelector('[data-action="delete"]').addEventListener("click", () => deleteKey(k.id));
+      list.appendChild(item);
+    });
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  render();
+</script>
+</body>
+</html>
