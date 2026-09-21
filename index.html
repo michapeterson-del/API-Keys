@@ -250,6 +250,23 @@
     margin-top: 14px;
   }
   .switch-mode a { color: var(--accent); cursor: pointer; text-decoration: none; }
+  .pw-change-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+  }
+  .pw-change-row .field { flex: 1; margin-bottom: 0; }
+  .pw-change-row button {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .pw-change-row button:hover { color: var(--text); border-color: var(--accent); }
 </style>
 </head>
 <body>
@@ -280,7 +297,22 @@
   <div id="app-view" class="hidden">
     <div class="user-bar">
       <span id="user-email"></span>
-      <button id="logout-btn">Abmelden</button>
+      <div>
+        <button id="pw-change-toggle">Passwort ändern</button>
+        <button id="logout-btn">Abmelden</button>
+      </div>
+    </div>
+
+    <div class="card hidden" id="pw-change-card">
+      <form id="pw-change-form">
+        <div class="pw-change-row">
+          <div class="field">
+            <label for="new-password">Neues Passwort</label>
+            <input type="password" id="new-password" required minlength="6" autocomplete="new-password">
+          </div>
+          <button type="submit" id="pw-change-submit">Speichern</button>
+        </div>
+      </form>
     </div>
 
     <div class="card">
@@ -347,6 +379,11 @@
   const authError = document.getElementById("auth-error");
   const userEmail = document.getElementById("user-email");
   const logoutBtn = document.getElementById("logout-btn");
+  const pwChangeToggle = document.getElementById("pw-change-toggle");
+  const pwChangeCard = document.getElementById("pw-change-card");
+  const pwChangeForm = document.getElementById("pw-change-form");
+  const newPasswordInput = document.getElementById("new-password");
+  const pwChangeSubmit = document.getElementById("pw-change-submit");
 
   const form = document.getElementById("key-form");
   const nameInput = document.getElementById("name");
@@ -411,6 +448,28 @@
 
   logoutBtn.addEventListener("click", async () => {
     await sb.auth.signOut();
+  });
+
+  pwChangeToggle.addEventListener("click", () => {
+    pwChangeCard.classList.toggle("hidden");
+    if (!pwChangeCard.classList.contains("hidden")) newPasswordInput.focus();
+  });
+
+  pwChangeForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const newPassword = newPasswordInput.value;
+    pwChangeSubmit.disabled = true;
+    try {
+      const { error } = await sb.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      showToast("Passwort geändert");
+      pwChangeForm.reset();
+      pwChangeCard.classList.add("hidden");
+    } catch (err) {
+      showToast(err.message || "Passwort ändern fehlgeschlagen", true);
+    } finally {
+      pwChangeSubmit.disabled = false;
+    }
   });
 
   sb.auth.onAuthStateChange((_event, session) => {
