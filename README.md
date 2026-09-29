@@ -5,6 +5,8 @@ Eine einfache Web-App zum Speichern deiner API-Keys (z. B. für Claude, ChatGPT,
 - Bezeichnung, Anbieter und der API-Key selbst
 - Keys anlegen, bearbeiten, löschen, ein-/ausblenden und kopieren
 - Login per E-Mail/Passwort (Supabase Auth); jeder Nutzer sieht nur seine eigenen Keys (Row Level Security)
+- Keine Registrierung über die Seite: Konten nur im Supabase-Dashboard anlegen und dort unter **Authentication → Sign In / Providers** „Allow new users to sign up“ ausschalten
+- `supabase-js` liegt fest versioniert unter `vendor/` (mit Integritätsprüfung) statt von einem fremden CDN
 - Läuft direkt über GitHub Pages als statische `index.html`
 
 ## Supabase-Setup

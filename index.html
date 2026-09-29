@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>API-Key Manager</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- supabase-js fest in dieser Version im Repo (kein fremdes CDN, Integritaet geprueft) -->
+<script src="vendor/supabase-js-2.117.2.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok"></script>
 <style>
   :root {
     --bg: #0f1115;
@@ -290,7 +291,6 @@
           <input type="password" id="password" required autocomplete="current-password" minlength="6">
         </div>
         <button type="submit" class="btn-primary" id="auth-submit">Anmelden</button>
-        <button type="button" class="btn-secondary" id="auth-toggle">Noch kein Konto? Registrieren</button>
         <p class="auth-error" id="auth-error"></p>
       </form>
     </div>
@@ -367,7 +367,6 @@
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   let editingId = null;
-  let isSignUp = false;
   let currentKeys = [];
   const revealedIds = new Set();
 
@@ -377,7 +376,6 @@
   const emailInput = document.getElementById("email");
   const passwordInput = document.getElementById("password");
   const authSubmit = document.getElementById("auth-submit");
-  const authToggle = document.getElementById("auth-toggle");
   const authError = document.getElementById("auth-error");
   const userEmail = document.getElementById("user-email");
   const logoutBtn = document.getElementById("logout-btn");
@@ -417,13 +415,6 @@
 
   // ---- Auth ----
 
-  authToggle.addEventListener("click", () => {
-    isSignUp = !isSignUp;
-    authSubmit.textContent = isSignUp ? "Registrieren" : "Anmelden";
-    authToggle.textContent = isSignUp ? "Schon ein Konto? Anmelden" : "Noch kein Konto? Registrieren";
-    authError.style.display = "none";
-  });
-
   authForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     authError.style.display = "none";
@@ -432,14 +423,9 @@
     const password = passwordInput.value;
 
     try {
-      if (isSignUp) {
-        const { error } = await sb.auth.signUp({ email, password });
-        if (error) throw error;
-        showToast("Konto erstellt. Falls Bestätigung nötig ist, prüfe dein E-Mail-Postfach.");
-      } else {
-        const { error } = await sb.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-      }
+      // Registrierung ist absichtlich nicht mehr möglich (nur bestehende Konten).
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) throw error;
     } catch (err) {
       authError.textContent = err.message || "Anmeldung fehlgeschlagen";
       authError.style.display = "block";
