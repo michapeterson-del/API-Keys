@@ -45,3 +45,15 @@ with check (auth.uid() = user_id);
 ## Hinweis
 
 Der `anon`/`public` Key von Supabase ist dafür gedacht, im Browser sichtbar zu sein – die eigentliche Absicherung erfolgt über Row Level Security (RLS) und den Login. Der **service_role**-Key darf niemals in dieser App verwendet werden.
+
+## Eigener Server (ohne Supabase)
+
+Auf dem Branch `coolify` läuft der Manager mit eigenem Server (`server.js`, keine
+Abhängigkeiten). Die Keys werden mit AES-256-GCM verschlüsselt in `DATA_DIR`
+gespeichert, der Login läuft über eine signierte Sitzung (Cookie).
+
+Umgebungsvariablen: `SESSION_SECRET` (mind. 32 Zeichen), `ENCRYPTION_KEY`
+(64 Hex-Zeichen), `ADMIN_EMAIL`, `ADMIN_PASSWORD` (nur beim ersten Start),
+`DATA_DIR` (z. B. `/data`, als dauerhafter Speicher einbinden), `PORT` (3000).
+
+Umzug der alten Keys: im laufenden Container `node import-supabase.js` ausführen.

@@ -1,0 +1,9 @@
+{
+  "name": "api-keys-manager",
+  "private": true,
+  "description": "API-Key Manager mit eigenem Server (ohne Supabase)",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node server.js"
+  }
+}
